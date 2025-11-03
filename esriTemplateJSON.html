@@ -27,7 +27,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 1.5rem 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.1);
         }
 
         h1 {
@@ -53,14 +53,14 @@
 
         .controls {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 1.25rem;
+            right: 1.25rem;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
             padding: 1rem;
             z-index: 1000;
-            min-width: 220px;
+            min-width: 13.75rem;
             max-height: 80vh;
             overflow-y: auto;
         }
@@ -68,7 +68,7 @@
         .control-group {
             margin-bottom: 1rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid #eee;
+            border-bottom: 0.0625rem solid #eee;
         }
 
         .control-group:last-child {
@@ -88,8 +88,8 @@
         select, button {
             width: 100%;
             padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 0.0625rem solid #ddd;
+            border-radius: 0.25rem;
             font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s;
@@ -109,8 +109,8 @@
         }
 
         button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+            transform: translateY(-0.0625rem);
+            box-shadow: 0 0.25rem 0.5rem rgba(102, 126, 234, 0.3);
         }
 
         button:active {
@@ -124,7 +124,7 @@
 
         button.secondary:hover {
             background: #e0e0e0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1);
         }
 
         .file-input-wrapper {
@@ -136,15 +136,15 @@
 
         .file-input-wrapper input[type=file] {
             position: absolute;
-            left: -9999px;
+            left: -62.4375rem;
         }
 
         .file-input-label {
             display: block;
             padding: 0.5rem;
             background: #f8f8f8;
-            border: 2px dashed #ddd;
-            border-radius: 4px;
+            border: 0.125rem dashed #ddd;
+            border-radius: 0.25rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
@@ -176,7 +176,7 @@
             align-items: center;
             padding: 0.5rem;
             background: #f8f8f8;
-            border-radius: 4px;
+            border-radius: 0.25rem;
             margin-bottom: 0.5rem;
         }
 
@@ -204,10 +204,10 @@
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            width: 3.125rem;
+            height: 3.125rem;
+            border: 0.25rem solid #f3f3f3;
+            border-top: 0.25rem solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -219,13 +219,13 @@
 
         .notification {
             position: absolute;
-            top: 20px;
+            top: 1.25rem;
             left: 50%;
             transform: translateX(-50%);
             background: white;
             padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
             z-index: 2000;
             display: none;
             animation: slideDown 0.3s ease;
@@ -236,17 +236,17 @@
         }
 
         .notification.success {
-            border-left: 4px solid #4caf50;
+            border-left: 0.25rem solid #4caf50;
         }
 
         .notification.error {
-            border-left: 4px solid #f44336;
+            border-left: 0.25rem solid #f44336;
         }
 
         @keyframes slideDown {
             from {
                 opacity: 0;
-                transform: translateX(-50%) translateY(-20px);
+                transform: translateX(-50%) translateY(-1.25rem);
             }
             to {
                 opacity: 1;

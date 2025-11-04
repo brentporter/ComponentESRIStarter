@@ -71,9 +71,10 @@ Contains:
 - Control panel UI elements
 - Map component declaration with widgets
 - Import map configuration for ArcGIS modules
+- File Upload for GeoJSON files
 - CSS styling for all components
 
-#### `esriTemplateJSON.html`
+#### `esriStarter.html`
 Contains:
 - Page structure and layout
 - Control panel UI elements

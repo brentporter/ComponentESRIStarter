@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>An ESRI Components First App Template</title>
+    <title>A Custom ESRI SDK Components-First App Template</title>
     <style>
         * {
             margin: 0;
@@ -24,9 +24,12 @@
         }
 
         header {
+            background: linear-gradient(90deg,rgba(42, 123, 155, 1) 0%, rgba(87, 199, 133, 1) 50%, rgba(237, 221, 83, 1) 100%);
+            /*
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            */
             color: white;
-            padding: 1.5rem 2rem;
+            padding: 1rem 1rem;
             box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.1);
         }
 
@@ -105,12 +108,12 @@
         }
 
         select:hover, select:focus {
-            border-color: #667eea;
+            border-color: #57C785FF;
             outline: none;
         }
 
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg,rgba(42, 123, 155, 1) 0%, rgba(87, 199, 133, 1) 50%, rgba(237, 221, 83, 1) 100%);
             color: white;
             border: none;
             font-weight: 600;
@@ -162,9 +165,9 @@
         }
 
         .file-input-label:hover {
-            border-color: #667eea;
+            border-color: #2A7B9BFF;
             background: #f0f0ff;
-            color: #667eea;
+            color: #2A7B9BFF;
         }
 
         .file-name {
@@ -216,7 +219,7 @@
             width: 3.125rem;
             height: 3.125rem;
             border: 0.25rem solid #f3f3f3;
-            border-top: 0.25rem solid #667eea;
+            border-top: 0.25rem solid #2A7B9BFF;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -245,7 +248,7 @@
         }
 
         .notification.success {
-            border-left: 0.25rem solid #4caf50;
+            border-left: 0.25rem solid #2A7B9BFF;
         }
 
         .notification.error {
@@ -277,14 +280,14 @@
 <body>
 <div id="container">
     <header>
-        <h1>Interactive Map Viewer</h1>
+        <h1>GIS Forum Map App Template</h1>
         <p class="subtitle">A Custom Maps JavaScript SDK Components-First App Template</p>
     </header>
 
     <div id="map-container">
         <div class="loader" id="loader">
             <div class="spinner"></div>
-            <p style="margin-top: 1rem; color: #667eea; font-weight: 600;">Loading map...</p>
+            <p style="margin-top: 1rem; color: #2A7B9BFF; font-weight: 600;">Loading map...</p>
         </div>
 
         <div class="notification" id="notification"></div>
@@ -293,6 +296,7 @@
                 basemap="streets-night-vector"
                 center="-97.71,30.34"
                 zoom="10">
+            <!--<arcgis-home position="top-left"></arcgis-home>-->
             <arcgis-zoom position="top-left"></arcgis-zoom>
             <arcgis-search position="top-right"></arcgis-search>
             <arcgis-legend position="bottom-left"></arcgis-legend>

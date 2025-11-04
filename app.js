@@ -1,7 +1,7 @@
 // Import ArcGIS modules
 import Graphic from 'https://js.arcgis.com/4.30/@arcgis/core/Graphic.js';
 import GraphicsLayer from 'https://js.arcgis.com/4.30/@arcgis/core/layers/GraphicsLayer.js';
-
+import Extent from 'https://js.arcgis.com/4.30/@arcgis/core/geometry/Extent.js';
 // DOM elements
 const mapEl = document.querySelector('arcgis-map');
 const basemapSelect = document.getElementById('basemap-select');
@@ -39,12 +39,29 @@ function handleBasemapChange(e) {
 }
 
 // Handle location navigation
-function handleLocationChange(e) {
-    if (e.target.value) {
+async function handleLocationChange(e) {
+    if (e.target.value && e.target.value !== 'def') {
         const [lon, lat, zoom] = e.target.value.split(',');
-        mapEl.center = `${lon}, ${lat}`;
-        mapEl.zoom = parseInt(zoom);
+        const view = mapEl.view;
+
+        try {
+            // Use goTo for smooth animation and forced zoom level
+            await view.goTo({
+                center: [parseFloat(lon), parseFloat(lat)],
+                zoom: parseInt(zoom),
+                duration: 1000  // Animation duration in milliseconds
+            });
+
+        } catch (error) {
+            console.error('Error navigating to location:', error);
+            showNotification('Failed to navigate to location', 'error');
+        }
     }
+
+    // Reset dropdown to default after navigation
+    setTimeout(() => {
+        locationSelect.value = 'def';
+    }, 100);
 }
 
 // Handle adding marker at center
@@ -131,24 +148,31 @@ async function loadGeoJSON(geojsonData, fileName) {
     });
 
     const graphics = [];
-    let bounds = null;
+    let allCoordinates = [];
 
     // Process GeoJSON features
     if (geojsonData.type === 'FeatureCollection') {
-        geojsonData.features.forEach(feature => {
+        geojsonData.features.forEach((feature, index) => {
             const graphic = createGraphicFromGeoJSON(feature);
             if (graphic) {
                 graphics.push(graphic);
-                bounds = updateBounds(bounds, graphic.geometry);
+                const coords = extractCoordinates(feature.geometry);
+                allCoordinates.push(...coords);
+            } else {
+                console.warn(`Failed to create graphic for feature ${index}`);
             }
         });
     } else if (geojsonData.type === 'Feature') {
         const graphic = createGraphicFromGeoJSON(geojsonData);
         if (graphic) {
             graphics.push(graphic);
-            bounds = updateBounds(bounds, graphic.geometry);
+            allCoordinates.push(...extractCoordinates(geojsonData.geometry));
         }
+    } else {
+        console.error('Unknown GeoJSON type:', geojsonData.type);
     }
+
+
 
     layer.addMany(graphics);
     view.map.add(layer);
@@ -158,12 +182,103 @@ async function loadGeoJSON(geojsonData, fileName) {
     loadedLayers.set(layerId, { layer, fileName });
     updateLayerList();
 
-    // Zoom to the extent of the loaded data
-    if (bounds) {
-        view.goTo(bounds.expand(1.2));
+    // Calculate bounds and zoom to the data
+    if (allCoordinates.length > 0) {
+        if (allCoordinates.length === 1) {
+            // Single point
+            const [lon, lat] = allCoordinates[0];
+            await view.goTo({
+                center: [lon, lat],
+                zoom: 15,
+                duration: 2000
+            });
+        } else {
+            // Multiple points - use Extent class
+            const extentData = calculateExtent(allCoordinates);
+            const extent = new Extent({
+                xmin: extentData.xmin,
+                ymin: extentData.ymin,
+                xmax: extentData.xmax,
+                ymax: extentData.ymax,
+                spatialReference: { wkid: 4326 }
+            });
+
+            await view.goTo(extent, { duration: 1000 });
+        }
+    }
+    locationSelect.value = 'def';
+    return layer;
+}
+
+// This function extracts coordinates
+function extractCoordinates(geometry) {
+    console.log('Extracting coordinates from geometry type:', geometry.type);
+    const coords = [];
+
+    switch (geometry.type) {
+        case 'Point':
+            coords.push(geometry.coordinates);
+            break;
+
+        case 'MultiPoint':
+            coords.push(...geometry.coordinates);
+            break;
+
+        case 'LineString':
+            coords.push(...geometry.coordinates);
+            break;
+
+        case 'MultiLineString':
+            geometry.coordinates.forEach(line => {
+                coords.push(...line);
+            });
+            break;
+
+        case 'Polygon':
+            geometry.coordinates.forEach(ring => {
+                coords.push(...ring);
+            });
+            break;
+
+        case 'MultiPolygon':
+            geometry.coordinates.forEach(polygon => {
+                polygon.forEach(ring => {
+                    coords.push(...ring);
+                });
+            });
+            break;
+
+        default:
+            console.warn('Unknown geometry type:', geometry.type);
     }
 
-    return layer;
+    console.log('Extracted coordinates:', coords);
+    return coords;
+}
+
+// This function calculates extent
+function calculateExtent(coordinates) {
+    const lons = coordinates.map(coord => coord[0]);
+    const lats = coordinates.map(coord => coord[1]);
+
+    const minLon = Math.min(...lons);
+    const maxLon = Math.max(...lons);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+
+    console.log('Bounds:', { minLon, maxLon, minLat, maxLat });
+
+    // Add 10% padding around the extent (or use fixed padding for single points)
+    const lonPadding = Math.max((maxLon - minLon) * 0.1, 0.01);
+    const latPadding = Math.max((maxLat - minLat) * 0.1, 0.01);
+
+    return {
+        xmin: minLon - lonPadding,
+        ymin: minLat - latPadding,
+        xmax: maxLon + lonPadding,
+        ymax: maxLat + latPadding,
+        spatialReference: { wkid: 4326 }
+    };
 }
 
 // Create ArcGIS Graphic from GeoJSON feature

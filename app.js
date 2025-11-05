@@ -1,7 +1,11 @@
 // Import ArcGIS modules
 import Graphic from 'https://js.arcgis.com/4.30/@arcgis/core/Graphic.js';
 import GraphicsLayer from 'https://js.arcgis.com/4.30/@arcgis/core/layers/GraphicsLayer.js';
+import SimpleRenderer from 'https://js.arcgis.com/4.30/@arcgis/core/renderers/SimpleRenderer.js';
 import Extent from 'https://js.arcgis.com/4.30/@arcgis/core/geometry/Extent.js';
+import Legend from 'https://js.arcgis.com/4.30/@arcgis/core/widgets/Legend.js';
+import Expand from 'https://js.arcgis.com/4.30/@arcgis/core/widgets/Expand.js';
+
 // DOM elements
 const mapEl = document.querySelector('arcgis-map');
 const basemapSelect = document.getElementById('basemap-select');
@@ -14,14 +18,49 @@ const layerListEl = document.getElementById('layer-list');
 const notification = document.getElementById('notification');
 const removeMarkerBtn = document.getElementById('remove-marker');
 
+// Variable for programmatic Legend Widget
+let legendWidget = null;
 // Store loaded layers
 const loadedLayers = new Map();
+
+
+// Programmatically create Legend Component
+async function createLegend() {
+    await mapEl.arcgisViewReadyChange;
+    const view = mapEl.view;
+    await view.when();
+
+    // Create the legend widget
+    legendWidget = new Legend({
+        view: view,
+        container: document.createElement("div"),
+        respectLayerVisibility: true
+    });
+
+    // Wrap it in an Expand widget for a cleaner UI
+    const legendExpand = new Expand({
+        view: view,
+        content: legendWidget,
+        expanded: true,
+        expandIconClass: "esri-icon-layer-list"
+    });
+
+    // Add to the view
+    view.ui.add(legendExpand, "bottom-left");
+
+    console.log('Legend created programmatically');
+}
 
 // Initialize app
 async function init() {
     await mapEl.arcgisViewReadyChange;
     loader.style.display = 'none';
-
+    setupEventListeners();
+    // Give the view a moment to fully initialize
+    // This is commented out for the moment
+    /*setTimeout(async () => {
+        await createLegend()
+    }, 750);*/
 }
 
 // Setup all event listeners
@@ -33,12 +72,12 @@ function setupEventListeners() {
     geojsonInput.addEventListener('change', handleGeoJSONUpload);
 }
 
-// Handle basemap change
+// basemap changes
 function handleBasemapChange(e) {
     mapEl.basemap = e.target.value;
 }
 
-// Handle location navigation
+// location navigation
 async function handleLocationChange(e) {
     if (e.target.value && e.target.value !== 'def') {
         const [lon, lat, zoom] = e.target.value.split(',');
@@ -64,7 +103,7 @@ async function handleLocationChange(e) {
     }, 100);
 }
 
-// Handle adding marker at center
+// adding marker at center
 async function handleAddMarker() {
     const view = mapEl.view;
     const center = view.center;
@@ -118,7 +157,7 @@ async function handleRemoveAllMarkers() {
     showNotification(`Removed ${count} marker(s)`, 'success');
 }
 
-// Handle GeoJSON file upload
+// GeoJSON file upload
 async function handleGeoJSONUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -142,47 +181,123 @@ async function handleGeoJSONUpload(e) {
 async function loadGeoJSON(geojsonData, fileName) {
     const view = mapEl.view;
 
-    // Create a new graphics layer for this GeoJSON
-    const layer = new GraphicsLayer({
-        title: fileName
-    });
+    // Separate graphics by geometry type
+    const graphicsByType = {
+        point: [],
+        line: [],
+        polygon: []
+    };
 
-    const graphics = [];
     let allCoordinates = [];
 
-    // Process GeoJSON features
+    // Process GeoJSON features and categorize by geometry type
     if (geojsonData.type === 'FeatureCollection') {
         geojsonData.features.forEach((feature, index) => {
             const graphic = createGraphicFromGeoJSON(feature);
             if (graphic) {
-                graphics.push(graphic);
                 const coords = extractCoordinates(feature.geometry);
                 allCoordinates.push(...coords);
-            } else {
-                console.warn(`Failed to create graphic for feature ${index}`);
+
+                // Categorize by geometry type
+                const geomType = feature.geometry.type.toLowerCase();
+                if (geomType.includes('point')) {
+                    graphicsByType.point.push(graphic);
+                } else if (geomType.includes('line')) {
+                    graphicsByType.line.push(graphic);
+                } else if (geomType.includes('polygon')) {
+                    graphicsByType.polygon.push(graphic);
+                }
             }
         });
     } else if (geojsonData.type === 'Feature') {
         const graphic = createGraphicFromGeoJSON(geojsonData);
         if (graphic) {
-            graphics.push(graphic);
             allCoordinates.push(...extractCoordinates(geojsonData.geometry));
+
+            const geomType = geojsonData.geometry.type.toLowerCase();
+            if (geomType.includes('point')) {
+                graphicsByType.point.push(graphic);
+            } else if (geomType.includes('line')) {
+                graphicsByType.line.push(graphic);
+            } else if (geomType.includes('polygon')) {
+                graphicsByType.polygon.push(graphic);
+            }
         }
-    } else {
-        console.error('Unknown GeoJSON type:', geojsonData.type);
+    }
+
+    // Create layers for each geometry type that has features
+    console.log("Jut before Graphics Layer Conditionals")
+    const createdLayers = [];
+    const layerIds = [];
+    const baseFileName = fileName.replace(/\.(geojson|json)$/i, '');
+
+    if (graphicsByType.point.length > 0) {
+        const pointLayer = new GraphicsLayer({
+            title: `${baseFileName} - Points`,
+            listMode: 'show',
+            renderer: pointRenderer,
+            legendEnabled: true
+        });
+        pointLayer.addMany(graphicsByType.point);
+        view.map.add(pointLayer);
+        createdLayers.push(pointLayer);
+        console.log(pointLayer)
+
+        const layerId = `layer-${Date.now()}-points`;
+        layerIds.push(layerId);
+        loadedLayers.set(layerId, {
+            layer: pointLayer,
+            fileName: `${baseFileName} - Points`,
+            parentGroup: baseFileName
+        });
+    }
+
+    if (graphicsByType.line.length > 0) {
+        const lineLayer = new GraphicsLayer({
+            title: `${baseFileName} - Lines`,
+            listMode: 'show',
+            renderer: lineRenderer,
+            legendEnabled: true
+        });
+        lineLayer.addMany(graphicsByType.line);
+        view.map.add(lineLayer);
+        createdLayers.push(lineLayer);
+
+        const layerId = `layer-${Date.now()}-lines`;
+        layerIds.push(layerId);
+        loadedLayers.set(layerId, {
+            layer: lineLayer,
+            fileName: `${baseFileName} - Lines`,
+            parentGroup: baseFileName
+        });
+    }
+
+    if (graphicsByType.polygon.length > 0) {
+        const polygonLayer = new GraphicsLayer({
+            title: `${baseFileName} - Polygons`,
+            listMode: 'show',
+            renderer: polygonRenderer,
+            legendEnabled: true
+        });
+        polygonLayer.addMany(graphicsByType.polygon);
+        console.log(polygonLayer.renderer);
+        view.map.add(polygonLayer);
+        createdLayers.push(polygonLayer);
+
+        const layerId = `layer-${Date.now()}-polygons`;
+        layerIds.push(layerId);
+        loadedLayers.set(layerId, {
+            layer: polygonLayer,
+            fileName: `${baseFileName} - Polygons`,
+            parentGroup: baseFileName
+        });
     }
 
 
-
-    layer.addMany(graphics);
-    view.map.add(layer);
-
-    // Store the layer
-    const layerId = `layer-${Date.now()}`;
-    loadedLayers.set(layerId, { layer, fileName });
     updateLayerList();
+/*    updateLegend();*/
 
-    // Calculate bounds and zoom to the data
+    // Zoom to the extent of all loaded data
     if (allCoordinates.length > 0) {
         if (allCoordinates.length === 1) {
             // Single point
@@ -190,7 +305,7 @@ async function loadGeoJSON(geojsonData, fileName) {
             await view.goTo({
                 center: [lon, lat],
                 zoom: 15,
-                duration: 2000
+                duration: 1000
             });
         } else {
             // Multiple points - use Extent class
@@ -206,10 +321,101 @@ async function loadGeoJSON(geojsonData, fileName) {
             await view.goTo(extent, { duration: 1000 });
         }
     }
-    locationSelect.value = 'def';
-    return layer;
+
+    return { layers: createdLayers, layerIds };
 }
 
+// Update the updateLayerList function to handle grouped layers
+
+function updateLayerList() {
+    if (loadedLayers.size === 0) {
+        layerListEl.innerHTML = '<p style="font-size: 0.8rem; color: #999;">No layers loaded</p>';
+        return;
+    }
+
+    // Group layers by parent group
+    const groupedLayers = new Map();
+    loadedLayers.forEach((data, layerId) => {
+        const group = data.parentGroup || data.fileName;
+        if (!groupedLayers.has(group)) {
+            groupedLayers.set(group, []);
+        }
+        groupedLayers.get(group).push({ layerId, ...data });
+    });
+
+    layerListEl.innerHTML = '';
+
+    groupedLayers.forEach((layers, groupName) => {
+        if (layers.length === 1 && !layers[0].parentGroup) {
+            // Single layer, not part of a group
+            const layer = layers[0];
+            const layerItem = document.createElement('div');
+            layerItem.className = 'layer-item';
+            layerItem.innerHTML = `
+        <span>${layer.fileName}</span>
+        <button onclick="window.removeLayer('${layer.layerId}')">Remove</button>
+      `;
+            layerListEl.appendChild(layerItem);
+        } else {
+            // Multiple layers in a group
+            const groupHeader = document.createElement('div');
+            groupHeader.style.cssText = 'font-weight: 600; margin-top: 0.5rem; padding: 0.5rem; background: #f0f0f0; border-radius: 0.25rem; display: flex; justify-content: space-between; align-items: center;';
+            groupHeader.innerHTML = `
+        <span>${groupName}</span>
+        <button style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0;" onclick="window.removeLayerGroup('${groupName}')">Remove All</button>
+      `;
+            layerListEl.appendChild(groupHeader);
+
+            layers.forEach(layer => {
+                const layerItem = document.createElement('div');
+                layerItem.className = 'layer-item';
+                layerItem.style.marginLeft = '1rem';
+                layerItem.innerHTML = `
+          <span style="font-size: 0.8rem;">${layer.fileName}</span>
+          <button onclick="window.removeLayer('${layer.layerId}')">Remove</button>
+        `;
+                layerListEl.appendChild(layerItem);
+            });
+        }
+    });
+    console.log('=== Current Map Layers ===');
+    mapEl.view.map.layers.forEach(l => console.log(l.title, l.type));
+}
+
+// Update removeLayer to handle parent groups
+window.removeLayer = function(layerId) {
+    const data = loadedLayers.get(layerId);
+    if (data) {
+        mapEl.view.map.remove(data.layer);
+        loadedLayers.delete(layerId);
+        updateLayerList();
+        /*updateLegend();*/
+        showNotification(`Removed ${data.fileName}`, 'success');
+    }
+};
+
+// Add new function to remove all layers in a group
+window.removeLayerGroup = function(groupName) {
+    const layersToRemove = [];
+    loadedLayers.forEach((data, layerId) => {
+        if (data.parentGroup === groupName) {
+            layersToRemove.push(layerId);
+        }
+    });
+
+    layersToRemove.forEach(layerId => {
+        const data = loadedLayers.get(layerId);
+        if (data) {
+            mapEl.view.map.remove(data.layer);
+            loadedLayers.delete(layerId);
+        }
+    });
+
+    updateLayerList();
+    /*updateLegend();*/
+    showNotification(`Removed all layers from ${groupName}`, 'success');
+
+};
 // This function extracts coordinates
 function extractCoordinates(geometry) {
     console.log('Extracting coordinates from geometry type:', geometry.type);
@@ -342,6 +548,37 @@ function convertGeoJSONGeometry(geojsonGeom) {
     }
 }
 
+const pointRenderer = new SimpleRenderer({
+    symbol: {
+        type: 'simple-marker',
+        color: [51, 51, 204, 0.7],
+        size: 8,
+        outline: {
+            color: [255, 255, 255],
+            width: 1
+        }
+    }
+});
+
+const lineRenderer = new SimpleRenderer({
+    symbol: {
+        type: 'simple-line',
+        color: [51, 51, 204, 0.8],
+        width: 2
+    }
+});
+
+const polygonRenderer = new SimpleRenderer({
+    symbol: {
+        type: 'simple-fill',
+        color: [51, 51, 204, 1.0],
+        outline: {
+            color: [0, 255, 255, 0.8],
+            width: 2
+        }
+    }
+});
+
 // Get appropriate symbol for geometry type
 function getSymbolForGeometry(geomType) {
     switch (geomType) {
@@ -366,6 +603,14 @@ function getSymbolForGeometry(geomType) {
             };
 
         case 'Polygon':
+            return {
+                type: 'simple-fill',
+                color: [255, 0, 0, 0.3],
+                outline: {
+                    color: [51, 51, 204, 0.8],
+                    width: 2
+                }
+            };
         case 'MultiPolygon':
             return {
                 type: 'simple-fill',
@@ -378,6 +623,35 @@ function getSymbolForGeometry(geomType) {
 
         default:
             return null;
+    }
+}
+
+//Not implemented - graphic layer not working...
+function updateLegend() {
+    if (!legendWidget) return;
+
+    const view = mapEl.view;
+
+    // Get all GraphicsLayers
+    const layerInfos = [];
+
+    view.map.layers.forEach(layer => {
+        if (layer.type === 'graphics' && layer.title && layer.visible) {
+            layerInfos.push({
+                layer: layer,
+                title: layer.title
+            });
+        }
+    });
+
+    console.log(layerInfos);
+    // Update legend with layer infos
+    if (layerInfos.length > 0) {
+        legendWidget.layerInfos = layerInfos;
+        console.log('Legend updated with', layerInfos.length, 'graphics layers');
+    } else {
+        // Reset to auto if no graphics layers
+        legendWidget.layerInfos = null;
     }
 }
 
@@ -401,7 +675,7 @@ function createPopupTemplate(properties) {
 }
 
 // Update bounds to include geometry
-function updateBounds(bounds, geometry) {
+/*function updateBounds(bounds, geometry) {
     if (!geometry) return bounds;
 
     let minX, minY, maxX, maxY;
@@ -454,37 +728,7 @@ function updateBounds(bounds, geometry) {
         spatialReference: bounds.spatialReference,
         expand: bounds.expand
     };
-}
-
-// Update the layer list UI
-function updateLayerList() {
-    if (loadedLayers.size === 0) {
-        layerListEl.innerHTML = '<p style="font-size: 0.8rem; color: #999;">No layers loaded</p>';
-        return;
-    }
-
-    layerListEl.innerHTML = '';
-    loadedLayers.forEach((data, layerId) => {
-        const layerItem = document.createElement('div');
-        layerItem.className = 'layer-item';
-        layerItem.innerHTML = `
-      <span>${data.fileName}</span>
-      <button onclick="window.removeLayer('${layerId}')">Remove</button>
-    `;
-        layerListEl.appendChild(layerItem);
-    });
-}
-
-// Remove a layer from the map
-window.removeLayer = function(layerId) {
-    const data = loadedLayers.get(layerId);
-    if (data) {
-        mapEl.view.map.remove(data.layer);
-        loadedLayers.delete(layerId);
-        updateLayerList();
-        showNotification(`Removed ${data.fileName}`, 'success');
-    }
-};
+}*/
 
 // Show notification
 function showNotification(message, type) {
@@ -497,6 +741,5 @@ function showNotification(message, type) {
 }
 
 // Start the app
-init().then(r => {
-    setupEventListeners();
+init().then( r => {
 });

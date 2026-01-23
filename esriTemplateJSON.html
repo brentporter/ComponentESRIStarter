@@ -266,7 +266,7 @@
             }
         }
     </style>
-
+    <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
     <script type="importmap">
         {
           "imports": {
@@ -275,12 +275,11 @@
         }
     </script>
     <script type="module" src="https://js.arcgis.com/map-components/4.30/arcgis-map-components.esm.js"></script>
-    <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
 </head>
 <body>
 <div id="container">
     <header>
-        <h1>GIS Forum Map App Template</h1>
+        <h1>Web GIS 2459 Map App Template</h1>
         <p class="subtitle">A Custom Maps JavaScript SDK Components-First App Template</p>
     </header>
 
@@ -296,9 +295,9 @@
                 basemap="streets-night-vector"
                 center="-97.71,30.34"
                 zoom="10">
-            <!--<arcgis-home position="top-left"></arcgis-home>-->
             <arcgis-zoom position="top-left"></arcgis-zoom>
             <arcgis-search position="top-right"></arcgis-search>
+            <arcgis-legend position="bottom-left"></arcgis-legend>
         </arcgis-map>
 
         <div class="controls">

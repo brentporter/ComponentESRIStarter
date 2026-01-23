@@ -241,7 +241,6 @@ async function loadGeoJSON(geojsonData, fileName) {
             renderer: lineRenderer,
             objectIdField: "ObjectID",
             geometryType: "polyline",
-            spatialReference: { wkid: 4326 },
             fields: fields,
             popupTemplate: {
                 title: baseFileName,
@@ -268,7 +267,6 @@ async function loadGeoJSON(geojsonData, fileName) {
             renderer: polygonRenderer,
             objectIdField: "ObjectID",
             geometryType: "polygon",
-            spatialReference: { wkid: 4326 },
             fields: fields,
             popupTemplate: {
                 title: baseFileName,
@@ -484,32 +482,38 @@ function convertGeoJSONGeometry(geojsonGeom) {
             return {
                 type: 'point',
                 longitude: geojsonGeom.coordinates[0],
-                latitude: geojsonGeom.coordinates[1]
+                latitude: geojsonGeom.coordinates[1],
+                spatialReference: { wkid: 4326 }
             };
         case 'LineString':
             return {
                 type: 'polyline',
-                paths: [geojsonGeom.coordinates]
+                paths: [geojsonGeom.coordinates],
+                spatialReference: { wkid: 4326 }
             };
         case 'Polygon':
             return {
                 type: 'polygon',
-                rings: geojsonGeom.coordinates
+                rings: geojsonGeom.coordinates,
+                spatialReference: { wkid: 4326 }
             };
         case 'MultiPoint':
             return {
                 type: 'multipoint',
-                points: geojsonGeom.coordinates
+                points: geojsonGeom.coordinates,
+                spatialReference: { wkid: 4326 }
             };
         case 'MultiLineString':
             return {
                 type: 'polyline',
-                paths: geojsonGeom.coordinates
+                paths: geojsonGeom.coordinates,
+                spatialReference: { wkid: 4326 }
             };
         case 'MultiPolygon':
             return {
                 type: 'polygon',
-                rings: geojsonGeom.coordinates.flat()
+                rings: geojsonGeom.coordinates.flat(),
+                spatialReference: { wkid: 4326 }
             };
         default:
             console.warn(`Unsupported geometry type: ${geojsonGeom.type}`);

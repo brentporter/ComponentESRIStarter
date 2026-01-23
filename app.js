@@ -197,8 +197,17 @@ async function loadGeoJSON(geojsonData, fileName) {
     // Create fields from collected properties
     const fields = createFieldsFromProperties(allProperties);
     console.log('Defined fields:', fields);
-    console.log('Sample graphic before adding to layer:', featuresByType.polygon.length > 0 ? featuresByType.polygon[0] : null);
-    console.log('Sample attributes:', featuresByType.polygon.length > 0 ? featuresByType.polygon[0].attributes : null);
+    console.log('Point count:', featuresByType.point.length);
+    console.log('Line count:', featuresByType.line.length);
+    console.log('Polygon count:', featuresByType.polygon.length);
+
+    if (featuresByType.point.length > 0) {
+        console.log('Sample point graphic:', featuresByType.point[0]);
+        console.log('Sample point attributes:', featuresByType.point[0].attributes);
+    }
+    if (featuresByType.polygon.length > 0) {
+        console.log('Sample polygon attributes:', featuresByType.polygon[0].attributes);
+    }
 
     const createdLayers = [];
     const layerIds = [];

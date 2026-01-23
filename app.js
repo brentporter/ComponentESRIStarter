@@ -1,4 +1,3 @@
-// Import ArcGIS modules
 import Graphic from 'https://js.arcgis.com/4.30/@arcgis/core/Graphic.js';
 import FeatureLayer from 'https://js.arcgis.com/4.30/@arcgis/core/layers/FeatureLayer.js';
 import SimpleRenderer from 'https://js.arcgis.com/4.30/@arcgis/core/renderers/SimpleRenderer.js';
@@ -148,13 +147,12 @@ async function loadGeoJSON(geojsonData, fileName) {
     };
 
     let allCoordinates = [];
-    let allProperties = []; // Collect all properties to define fields
-    let objectIdCounter = 1; // Use sequential IDs instead of random
+    let allProperties = [];
+    let objectIdCounter = 1;
 
     // Process GeoJSON features and categorize by geometry type
     if (geojsonData.type === 'FeatureCollection') {
         geojsonData.features.forEach((feature) => {
-            // Collect properties for field definition
             if (feature.properties && Object.keys(feature.properties).length > 0) {
                 allProperties.push(feature.properties);
             }
@@ -194,20 +192,7 @@ async function loadGeoJSON(geojsonData, fileName) {
         }
     }
 
-    // Create fields from collected properties
     const fields = createFieldsFromProperties(allProperties);
-    console.log('Defined fields:', fields);
-    console.log('Point count:', featuresByType.point.length);
-    console.log('Line count:', featuresByType.line.length);
-    console.log('Polygon count:', featuresByType.polygon.length);
-
-    if (featuresByType.point.length > 0) {
-        console.log('Sample point graphic:', featuresByType.point[0]);
-        console.log('Sample point attributes:', featuresByType.point[0].attributes);
-    }
-    if (featuresByType.polygon.length > 0) {
-        console.log('Sample polygon attributes:', featuresByType.polygon[0].attributes);
-    }
 
     const createdLayers = [];
     const layerIds = [];
@@ -215,16 +200,14 @@ async function loadGeoJSON(geojsonData, fileName) {
 
     // Create FeatureLayers for each geometry type that has features
     if (featuresByType.point.length > 0) {
-        console.log('Creating point layer...');
-        console.log('Sample point graphic:', featuresByType.point[0]);
-        console.log('Sample point graphic attributes:', featuresByType.point[0].attributes);
-
         const pointLayer = new FeatureLayer({
             source: featuresByType.point,
             title: `${baseFileName} - Points`,
             renderer: pointRenderer,
             objectIdField: "ObjectID",
+            geometryType: "point",
             fields: fields,
+            outFields: ['*'],
             popupTemplate: {
                 title: baseFileName,
                 content: createPopupContent
@@ -325,7 +308,6 @@ async function loadGeoJSON(geojsonData, fileName) {
     return { layers: createdLayers, layerIds };
 }
 
-// Update the layer list UI
 function updateLayerList() {
     if (loadedLayers.size === 0) {
         layerListEl.innerHTML = '<p style="font-size: 0.8rem; color: #999;">No layers loaded</p>';
@@ -465,20 +447,15 @@ function calculateExtent(coordinates) {
 }
 
 function createGraphicFromGeoJSON(feature, objectId) {
-    console.log('Feature properties:', feature.properties);
-
     const geometry = convertGeoJSONGeometry(feature.geometry);
     if (!geometry) return null;
 
     const symbol = getSymbolForGeometry(feature.geometry.type);
 
-    // Create attributes - MUST include all properties
     const attributes = {
         ObjectID: objectId,
         ...feature.properties
     };
-
-    console.log('Created attributes:', attributes);
 
     return new Graphic({
         geometry: geometry,
@@ -532,7 +509,6 @@ function convertGeoJSONGeometry(geojsonGeom) {
     }
 }
 
-// Renderers for different geometry types
 const pointRenderer = new SimpleRenderer({
     symbol: {
         type: 'simple-marker',
@@ -600,24 +576,25 @@ function getSymbolForGeometry(geomType) {
 }
 
 function createPopupContent(feature) {
-    console.log('Popup feature:', feature);
-    console.log('Graphic:', feature.graphic);
-    console.log('Attributes:', feature.graphic.attributes);
-
     const attributes = feature.graphic.attributes;
-    if (!attributes || Object.keys(attributes).length === 0) {
+
+    if (!attributes) {
+        return 'No attributes object found';
+    }
+
+    const keys = Object.keys(attributes).filter(key => key !== 'ObjectID');
+
+    if (keys.length === 0) {
         return 'No properties available';
     }
 
-    const content = Object.entries(attributes)
-        .filter(([key]) => key !== 'ObjectID')
-        .map(([key, value]) => `<b>${key}:</b> ${value}`)
+    const content = keys
+        .map(key => `<b>${key}:</b> ${attributes[key]}`)
         .join('<br>');
 
-    return content || 'No properties available';
+    return content;
 }
 
-// Helper function to create fields array from raw GeoJSON properties
 function createFieldsFromProperties(propertiesArray) {
     const fields = [{
         name: "ObjectID",
@@ -628,15 +605,12 @@ function createFieldsFromProperties(propertiesArray) {
     if (propertiesArray.length > 0) {
         const allKeys = new Set();
 
-        // Collect all unique property keys
         propertiesArray.forEach(props => {
             Object.keys(props).forEach(key => allKeys.add(key));
         });
 
-        // Create fields for each unique key
         allKeys.forEach(key => {
-            // Sample the first occurrence of this key to determine type
-            let fieldType = 'string'; // Default to string
+            let fieldType = 'string';
 
             for (const props of propertiesArray) {
                 if (props.hasOwnProperty(key) && props[key] != null) {
@@ -645,10 +619,9 @@ function createFieldsFromProperties(propertiesArray) {
                         fieldType = Number.isInteger(value) ? 'integer' : 'double';
                         break;
                     } else if (typeof value === 'boolean') {
-                        fieldType = 'string'; // Store booleans as strings
+                        fieldType = 'string';
                         break;
                     }
-                    // If it's a string, keep it as string
                     break;
                 }
             }
@@ -661,7 +634,6 @@ function createFieldsFromProperties(propertiesArray) {
         });
     }
 
-    console.log('Created fields:', fields);
     return fields;
 }
 
@@ -674,5 +646,4 @@ function showNotification(message, type) {
     }, 3000);
 }
 
-// Start the app
 init().then(r => {});

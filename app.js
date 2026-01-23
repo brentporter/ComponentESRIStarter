@@ -331,7 +331,7 @@ function updateLayerList() {
             const layerItem = document.createElement('div');
             layerItem.className = 'layer-item';
             layerItem.innerHTML = `
-                <span>${layer.fileName}</span>
+                <span style="cursor: pointer;" onclick="window.zoomToLayer('${layer.layerId}')">${layer.fileName}</span>
                 <button onclick="window.removeLayer('${layer.layerId}')">Remove</button>
             `;
             layerListEl.appendChild(layerItem);
@@ -349,7 +349,7 @@ function updateLayerList() {
                 layerItem.className = 'layer-item';
                 layerItem.style.marginLeft = '1rem';
                 layerItem.innerHTML = `
-                    <span style="font-size: 0.8rem;">${layer.fileName}</span>
+                    <span style="cursor: pointer; font-size: 0.8rem;" onclick="window.zoomToLayer('${layer.layerId}')">${layer.fileName}</span>
                     <button onclick="window.removeLayer('${layer.layerId}')">Remove</button>
                 `;
                 layerListEl.appendChild(layerItem);
@@ -386,6 +386,64 @@ window.removeLayerGroup = function(groupName) {
 
     updateLayerList();
     showNotification(`Removed all layers from ${groupName}`, 'success');
+};
+
+window.zoomToLayer = async function(layerId) {
+    const data = loadedLayers.get(layerId);
+    if (!data) return;
+
+    const layer = data.layer;
+    const view = mapEl.view;
+
+    try {
+        // Query all features from the layer
+        const query = layer.createQuery();
+        query.where = "1=1"; // Get all features
+        query.returnGeometry = true;
+
+        const results = await layer.queryFeatures(query);
+
+        if (results.features.length === 0) {
+            showNotification('No features found in layer', 'error');
+            return;
+        }
+
+        // Calculate extent from all features
+        let allCoords = [];
+        results.features.forEach(feature => {
+            const geom = feature.geometry;
+
+            if (geom.type === 'point') {
+                allCoords.push([geom.longitude, geom.latitude]);
+            } else if (geom.type === 'polyline') {
+                geom.paths.forEach(path => {
+                    path.forEach(coord => allCoords.push(coord));
+                });
+            } else if (geom.type === 'polygon') {
+                geom.rings.forEach(ring => {
+                    ring.forEach(coord => allCoords.push(coord));
+                });
+            }
+        });
+
+        if (allCoords.length === 0) return;
+
+        // Use existing calculateExtent function
+        const extentData = calculateExtent(allCoords);
+        const extent = new Extent({
+            xmin: extentData.xmin,
+            ymin: extentData.ymin,
+            xmax: extentData.xmax,
+            ymax: extentData.ymax,
+            spatialReference: { wkid: 4326 }
+        });
+
+        await view.goTo(extent, { duration: 1000 });
+        showNotification(`Zoomed to ${data.fileName}`, 'success');
+    } catch (error) {
+        console.error('Error zooming to layer:', error);
+        showNotification('Failed to zoom to layer', 'error');
+    }
 };
 
 function extractCoordinates(geometry) {

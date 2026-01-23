@@ -242,6 +242,7 @@ async function loadGeoJSON(geojsonData, fileName) {
             objectIdField: "ObjectID",
             geometryType: "polyline",
             fields: fields,
+            outFields: ['*'],
             popupTemplate: {
                 title: baseFileName,
                 content: createPopupContent
@@ -268,6 +269,7 @@ async function loadGeoJSON(geojsonData, fileName) {
             objectIdField: "ObjectID",
             geometryType: "polygon",
             fields: fields,
+            outFields: ['*'],
             popupTemplate: {
                 title: baseFileName,
                 content: createPopupContent

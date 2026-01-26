@@ -5,15 +5,11 @@ import Extent from 'https://js.arcgis.com/4.30/@arcgis/core/geometry/Extent.js';
 
 // DOM elements
 const mapEl = document.querySelector('arcgis-map');
-const basemapSelect = document.getElementById('basemap-select');
-const locationSelect = document.getElementById('location-select');
-const addMarkerBtn = document.getElementById('add-marker');
 const loader = document.getElementById('loader');
 const geojsonInput = document.getElementById('geojson-input');
 const fileNameDisplay = document.getElementById('file-name');
 const layerListEl = document.getElementById('layer-list');
 const notification = document.getElementById('notification');
-const removeMarkerBtn = document.getElementById('remove-marker');
 
 // Store loaded layers
 const loadedLayers = new Map();
@@ -27,93 +23,7 @@ async function init() {
 
 // Setup all event listeners
 function setupEventListeners() {
-    removeMarkerBtn.addEventListener('click', handleRemoveAllMarkers);
-    basemapSelect.addEventListener('change', handleBasemapChange);
-    locationSelect.addEventListener('change', handleLocationChange);
-    addMarkerBtn.addEventListener('click', handleAddMarker);
-    geojsonInput.addEventListener('change', handleGeoJSONUpload);
-}
-
-// basemap changes
-function handleBasemapChange(e) {
-    mapEl.basemap = e.target.value;
-}
-
-// location navigation
-async function handleLocationChange(e) {
-    if (e.target.value && e.target.value !== 'def') {
-        const [lon, lat, zoom] = e.target.value.split(',');
-        const view = mapEl.view;
-
-        try {
-            await view.goTo({
-                center: [parseFloat(lon), parseFloat(lat)],
-                zoom: parseInt(zoom),
-                duration: 1000
-            });
-        } catch (error) {
-            console.error('Error navigating to location:', error);
-            showNotification('Failed to navigate to location', 'error');
-        }
-    }
-
-    setTimeout(() => {
-        locationSelect.value = 'def';
-    }, 100);
-}
-
-// adding marker at center
-async function handleAddMarker() {
-    const view = mapEl.view;
-    const center = view.center;
-
-    const point = {
-        type: 'point',
-        longitude: center.longitude,
-        latitude: center.latitude
-    };
-
-    const markerSymbol = {
-        type: 'simple-marker',
-        color: [226, 119, 40],
-        outline: {
-            color: [255, 255, 255],
-            width: 2
-        },
-        size: 12
-    };
-
-    const pointGraphic = new Graphic({
-        geometry: point,
-        symbol: markerSymbol,
-        attributes: {
-            name: 'Custom Marker',
-            description: `Lat: ${center.latitude.toFixed(4)}, Lon: ${center.longitude.toFixed(4)}`
-        },
-        popupTemplate: {
-            title: '{name}',
-            content: '{description}'
-        }
-    });
-
-    view.graphics.add(pointGraphic);
-    showNotification('Marker added successfully!', 'success');
-}
-
-// Remove ALL markers at once
-async function handleRemoveAllMarkers() {
-    const view = mapEl.view;
-    const graphics = view.graphics;
-
-    if (graphics.length === 0) {
-        showNotification('No markers to remove', 'error');
-        return;
-    }
-
-    const count = graphics.length;
-    graphics.removeAll();
-
-    showNotification(`Removed ${count} marker(s)`, 'success');
+   geojsonInput.addEventListener('change', handleGeoJSONUpload);
 }
 
 // GeoJSON file upload
@@ -646,11 +556,9 @@ function createPopupContent(feature) {
         return 'No properties available';
     }
 
-    const content = keys
+    return keys
         .map(key => `<b>${key}:</b> ${attributes[key]}`)
         .join('<br>');
-
-    return content;
 }
 
 function createFieldsFromProperties(propertiesArray) {

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Custom ESRI SDK Components-First App Template</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(90deg,rgba(42, 123, 155, 1) 0%, rgba(87, 199, 133, 1) 50%, rgba(237, 221, 83, 1) 100%);
+            /*
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            */
+            color: white;
+            padding: 1rem 1rem;
+            box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        #map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        arcgis-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 1.75rem;
+            right: 1.25rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
+            padding: 1rem;
+            z-index: 1000;
+            min-width: 13.75rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 0.0625rem solid #eee;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 0.5rem;
+            border: 0.0625rem solid #ddd;
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        arcgis-search::part(search-icon) {
+            color: #000000 !important;
+        }
+
+        .esri-search .esri-search__submit-button {
+            opacity: 1 !important;
+            color:black !important;
+        }
+
+        select:hover, select:focus {
+            border-color: #57C785FF;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(90deg,rgba(42, 123, 155, 1) 0%, rgba(87, 199, 133, 1) 50%, rgba(237, 221, 83, 1) 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        button:hover {
+            transform: translateY(-0.0625rem);
+            box-shadow: 0 0.25rem 0.5rem rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        button.secondary:hover {
+            background: #e0e0e0;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -62.4375rem;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 0.5rem;
+            background: #f8f8f8;
+            border: 0.125rem dashed #ddd;
+            border-radius: 0.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .file-input-label:hover {
+            border-color: #2A7B9BFF;
+            background: #f0f0ff;
+            color: #2A7B9BFF;
+        }
+
+        .file-name {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #666;
+            word-break: break-all;
+        }
+
+        .layer-list {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .layer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: #f8f8f8;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .layer-item span {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .layer-item button {
+            width: auto;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            margin: 0 0 0 0.5rem;
+        }
+
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 999;
+        }
+
+        .spinner {
+            width: 3.125rem;
+            height: 3.125rem;
+            border: 0.25rem solid #f3f3f3;
+            border-top: 0.25rem solid #2A7B9BFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: absolute;
+            top: 1.25rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        .notification.success {
+            border-left: 0.25rem solid #2A7B9BFF;
+        }
+
+        .notification.error {
+            border-left: 0.25rem solid #f44336;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-1.25rem);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+    <script type="importmap">
+        {
+          "imports": {
+            "@arcgis/core/": "https://js.arcgis.com/4.30/@arcgis/core/"
+          }
+        }
+    </script>
+    <script type="module" src="https://js.arcgis.com/map-components/4.30/arcgis-map-components.esm.js"></script>
+</head>
+<body>
+<div id="container">
+    <header>
+        <h1>Web GIS 2459 Map App Template</h1>
+        <p class="subtitle">A Custom Maps JavaScript SDK Components-First App Template</p>
+    </header>
+
+    <div id="map-container">
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: #2A7B9BFF; font-weight: 600;">Loading map...</p>
+        </div>
+
+        <div class="notification" id="notification"></div>
+
+        <arcgis-map
+                basemap="streets-night-vector"
+                center="-97.71,30.34"
+                zoom="10">
+            </arcgis-map>
+
+    </div>
+</div>
+
+<script type="module" src="appInitial.js"></script>
+</body>
+</html>

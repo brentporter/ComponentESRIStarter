@@ -1,0 +1,141 @@
+/** Modal Overlay - covers entire screen **/
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Modal Content Box */
+.modal-content {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 37.5rem;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 1.25rem 3.125rem rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(1.875rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);*/
+    background: rgba(42, 123, 155, 1);
+    color: white;
+    padding: 1.5rem;
+    margin: -2rem -2rem 1.5rem -2rem;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.75rem;
+}
+
+.modal-body {
+    color: #333;
+    line-height: 1.6;
+}
+
+.modal-body h3 {
+    color: #667eea;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.modal-body p {
+    margin-bottom: 1rem;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+}
+
+.feature-list li {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    border-left: 0.25rem solid #667eea;
+}
+
+.feature-list li strong {
+    color: #667eea;
+}
+
+.modal-footer {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 0.0625rem solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    cursor: pointer;
+}
+
+.checkbox-container label {
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.modal-button {
+    background: rgba(42, 123, 155, 1);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.modal-button:hover {
+    transform: translateY(-0.125rem);
+    box-shadow: 0 0.5rem 1rem rgba(102, 126, 234, 0.3);
+}
+
+.modal-button:active {
+    transform: translateY(0);
+}

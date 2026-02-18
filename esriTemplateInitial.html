@@ -267,6 +267,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="modalIntro.css">
     <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
     <script type="importmap">
         {
@@ -283,6 +284,65 @@
         <h1>Web GIS 2459 Map App Template</h1>
         <p class="subtitle">A Custom Maps JavaScript SDK Components-First App Template</p>
     </header>
+    <div id="welcome-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🗺️ Welcome to the Interactive Map Viewer!</h2>
+        </div>
+
+        <div class="modal-body">
+            <p>Thank you for visiting! This application helps you visualize and explore geographic data in an interactive way.</p>
+
+            <h3>Key Features:</h3>
+            <ul class="feature-list">
+                <li>
+                    <strong>📁 Upload GeoJSON Files:</strong>
+                    Load your own geographic data and visualize it instantly
+                </li>
+                <li>
+                    <strong>🗺️ Multiple Basemaps:</strong>
+                    Switch between topographic, satellite, streets, and more
+                </li>
+                <li>
+                    <strong>🔍 Search Locations:</strong>
+                    Find any place in the world with the search tool
+                </li>
+                <li>
+                    <strong>📍 Add Markers:</strong>
+                    Place custom markers anywhere on the map
+                </li>
+                <li>
+                    <strong>📊 Interactive Legend:</strong>
+                    See symbols for all your loaded layers
+                </li>
+                <li>
+                    <strong>🎨 Layer Management:</strong>
+                    Control visibility and remove layers as needed
+                </li>
+            </ul>
+
+            <h3>Getting Started:</h3>
+            <p>
+                1. Use the controls in the top-right corner to change basemaps and locations<br>
+                2. Upload a GeoJSON file to see your data on the map<br>
+                3. Click features to see their information in popups<br>
+                4. Use the legend in the bottom-left to understand your data
+            </p>
+
+            <p style="color: #666; font-style: italic;">
+                💡 Tip: Try uploading a GeoJSON file to get started!
+            </p>
+        </div>
+
+        <div class="modal-footer">
+            <div class="checkbox-container">
+                <input type="checkbox" id="dont-show-again">
+                <label for="dont-show-again">Don't show this again</label>
+            </div>
+            <button id="close-modal" class="modal-button">Get Started</button>
+        </div>
+    </div>
+</div>
 
     <div id="map-container">
         <div class="loader" id="loader">

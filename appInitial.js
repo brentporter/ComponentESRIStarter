@@ -11,4 +11,14 @@ async function init() {
     loader.style.display = 'none';
 }
 
-init().then(r => {});
+/*
+init().then(r => {});*/
+init()
+    .then(() => {
+        console.log('Map initialized successfully');
+        // Do post-initialization tasks
+    })
+    .catch(error => {
+        console.error('Initialization failed:', error);
+        showNotification('Failed to load map', 'error');
+    });

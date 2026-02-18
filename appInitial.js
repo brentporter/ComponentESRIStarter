@@ -16,9 +16,9 @@ init().then(r => {});*/
 init()
     .then(() => {
         console.log('Map initialized successfully');
-        // Do post-initialization tasks
+        // Do any post-initialization tasks
     })
     .catch(error => {
         console.error('Initialization failed:', error);
-        showNotification('Failed to load map', 'error');
+        //showNotification('Failed to load map', 'error');
     });
